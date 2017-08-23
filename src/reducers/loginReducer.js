@@ -1,6 +1,8 @@
 const loginReducer = (state = {
     isLoginSuccess: false,
     isLoginPending: false,
+    token: null,
+    username: null,
     loginError: null
 },
 action) => {
@@ -8,19 +10,23 @@ action) => {
         case "SET_LOGIN_PENDING":
             state = {
                 ...state,
-                isLoginPending: action.payload
+                isLoginPending: true
             }
             break;
         case "SET_LOGIN_SUCCESS":
             state = {
                 ...state,
-                isLoginSuccess: action.payload
+                isLoginSuccess: true,
+                isLoginPending: false,
+                username: action.username,
+                token: action.token
             }
             break;
         case "SET_LOGIN_ERROR":
             state = {
                 ...state,
-                loginError: action.payload
+                loginError: true,
+                isLoginPending: false
             }
             break;
     }

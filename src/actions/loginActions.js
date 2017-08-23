@@ -1,49 +1,58 @@
+import { authContext } from '../adal/adal-config';
+let user = authContext.getCachedUser();
+let userName = undefined;
+let userToken = null;
+
 const SET_LOGIN_PENDING = 'SET_LOGIN_PENDING';
 const SET_LOGIN_SUCCESS = 'SET_LOGIN_SUCCESS';
 const SET_LOGIN_ERROR = 'SET_LOGIN_ERROR';
 
-function setLoginPending(isLoginPending){
+function setLoginPending(){
     return{
         type: SET_LOGIN_PENDING,
-        payload: isLoginPending
     };
 }
 
-function setLoginSuccess(isLoginSuccess){
+function setLoginSuccess(username, token){
     return{
         type: SET_LOGIN_SUCCESS,
-        payload: isLoginSuccess
+        username: username,
+        token: token
     };
 }
 
-function setLoginError(loginError){
+function setLoginError(){
     return{
-        type: SET_LOGIN_ERROR,
-        payload: loginError
+        type: SET_LOGIN_ERROR
     };
 }
 
-export function loginUser(email, password){
+export function checkLoginStatus(){
+  return dispatch => {
+      dispatch(setLoginPending());
+      if (user) {
+          userName = user.profile.name;
+          // Acquire token
+          authContext.acquireToken(authContext.config.clientId, function(error, token) {
+          // Handle ADAL Errors.
+              if (error) {
+                  console.log('ADAL error occurred: ' + error);
+                  return;
+              }
 
-    let url = "http://localhost/dummyAPI/login/index.php?email="+ email +"&password=" + password;
-    return dispatch => {
-        dispatch(setLoginPending(true));
-        dispatch(setLoginSuccess(false));
-        dispatch(setLoginError(null));
+              if (!token) {
+                  console.log('No token!');
+                  return;
+              }
+              userToken = token;
+          });
+          dispatch(setLoginSuccess(userName, userToken));
+      } else {
+          authContext.login();
+      }
+  }
+}
 
-        fetch(url)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(parsedData) {
-                dispatch(setLoginPending(false));
-                if(parsedData[0] === true){
-                    dispatch(setLoginSuccess(true));
-                    console.log("User authenticated.");
-                }else{
-                    dispatch(setLoginError(true));
-                    console.log("User not authenticated.");
-                }
-            })
-    }
+export function loginUser(){
+    authContext.login();
 }
